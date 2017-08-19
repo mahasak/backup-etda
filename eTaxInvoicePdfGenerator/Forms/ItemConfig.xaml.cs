@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows;
-using System.Windows.Input;
-using eTaxInvoicePdfGenerator.Dao;
-using eTaxInvoicePdfGenerator.Entity;
-using System.Text.RegularExpressions;
-using System.Windows.Controls;
+﻿using eTaxInvoicePdfGenerator.Dao;
 using eTaxInvoicePdfGenerator.Dialogs;
+using ETDA.Invoice.Api.Entities;
+using System;
+using System.Collections.Generic;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace eTaxInvoicePdfGenerator.Forms
 {
@@ -18,78 +16,75 @@ namespace eTaxInvoicePdfGenerator.Forms
     {
         //public int id;
         public ItemObj itemObj;
+
         public bool saveStatus;
+
         public ItemConfig(bool save)
         {
             this.saveStatus = save;
             InitializeComponent();
         }
 
-        private void Window_Closed(object sender, EventArgs e)
+        private void exitBtn_Click(object sender, RoutedEventArgs e)
         {
-            if (saveStatus)
+            if (isChange())
             {
-                new Item().Show();
+                YesNoCancel ync = new YesNoCancel("ต้องการบันทึกข้อมูลหรือไม่", "ยืนยันการออกจากการทำงาน");
+                ync.ShowDialog();
+                switch (ync.response)
+                {
+                    case YesNoCancel.RESULT_YES:
+                        if (!saveData())
+                        {
+                            return;
+                        }
+                        break;
+
+                    case YesNoCancel.RESULT_NO:
+                        break;
+
+                    case YesNoCancel.RESULT_CANCEL:
+                        return;
+
+                    default:
+                        return;
+                }
             }
+            this.Close();
         }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private void is_item_Checked(object sender, RoutedEventArgs e)
         {
-            setCodeList();
-            //if (this.id != 0)
-            if (this.itemObj != null)
+            unitCbb.IsEditable = true;
+            unitCbb.IsEnabled = true;
+        }
+
+        private void is_service_Checked(object sender, RoutedEventArgs e)
+        {
+            unitCbb.IsEditable = false;
+            unitCbb.IsEnabled = false;
+        }
+
+        private bool isChange()
+        {
+            if (itemObj == null)
             {
-                showData();
+                return nameTb.Text != "" || detailTb.Text != "" || is_item.IsChecked != true || priceTb.Text != "" || unitCbb.Text != "" ||
+                    itemCodeTb.Text != "" || itemCodeInterTb.Text != "";
             }
             else
             {
-
-                is_item.IsChecked = true;
-            }
-            Keyboard.Focus(nameTb);
-        }
-
-        private void setCodeList()
-        {
-            try
-            {
-                List<CodeList> list = new CodeListDao().list();
-                unitCbb.DisplayMemberPath = "description";
-                unitCbb.SelectedValuePath = "code";
-                unitCbb.ItemsSource = list;
-            }
-            catch (Exception ex)
-            {
-                new AlertBox(ex.Message).ShowDialog();
-            }
-        }
-
-        private void showData()
-        {
-            try
-            {
                 //ItemObj obj = new ItemDao().select(this.id);
-                nameTb.Text = itemObj.name;
-                detailTb.Text = itemObj.detail;
-                priceTb.Text = itemObj.pricePerUnit.ToString();
-                if (itemObj.isService)
-                {
-                    is_service.IsChecked = true;
-                    unitCbb.IsEditable = false;
-                }
-                else
-                {
-                    is_item.IsChecked = true;
-                    unitCbb.IsEditable = true;
-                }
-                unitCbb.Text = itemObj.unit;
-                itemCodeTb.Text = itemObj.itemCode;
-                itemCodeInterTb.Text = itemObj.itemCodeInter;
+                ItemObj obj = itemObj;
+                return nameTb.Text != obj.name || detailTb.Text != obj.detail || obj.isService != is_service.IsChecked ||
+                    obj.pricePerUnit.ToString() != priceTb.Text || obj.unit != unitCbb.Text ||
+                    itemCodeTb.Text != itemObj.itemCode || itemCodeInterTb.Text != itemObj.itemCodeInter;
             }
-            catch (Exception ex)
-            {
-                new AlertBox(ex.Message).ShowDialog();
-            }
+        }
+
+        private void saveBtn_Click(object sender, RoutedEventArgs e)
+        {
+            saveData();
         }
 
         private bool saveData()
@@ -158,72 +153,75 @@ namespace eTaxInvoicePdfGenerator.Forms
             }
         }
 
-        private void validateData()
+        private void setCodeList()
         {
-            util.Validator validator = new util.Validator();
-            validator.validateText(nameTb, "ชื่อสินค้า/บริการ", 256, true);
-            validator.validatePrice(priceTb);
-            if (is_item.IsChecked.Value)
+            try
             {
-                validator.validateUnit(unitCbb);
+                List<CodeList> list = new CodeListDao().list();
+                unitCbb.DisplayMemberPath = "description";
+                unitCbb.SelectedValuePath = "code";
+                unitCbb.ItemsSource = list;
             }
-
-            validator.validateItemCode(itemCodeTb);
-            validator.validateItemCodeInter(itemCodeInterTb);
+            catch (Exception ex)
+            {
+                new AlertBox(ex.Message).ShowDialog();
+            }
         }
 
-        private bool isChange()
+        private void showData()
         {
-            if (itemObj == null)
-            {
-                return nameTb.Text != "" || detailTb.Text != "" || is_item.IsChecked != true || priceTb.Text != "" || unitCbb.Text != "" ||
-                    itemCodeTb.Text != "" || itemCodeInterTb.Text != "";
-            }
-            else
+            try
             {
                 //ItemObj obj = new ItemDao().select(this.id);
-                ItemObj obj = itemObj;
-                return nameTb.Text != obj.name || detailTb.Text != obj.detail || obj.isService != is_service.IsChecked ||
-                    obj.pricePerUnit.ToString() != priceTb.Text || obj.unit != unitCbb.Text ||
-                    itemCodeTb.Text != itemObj.itemCode || itemCodeInterTb.Text != itemObj.itemCodeInter;
+                nameTb.Text = itemObj.name;
+                detailTb.Text = itemObj.detail;
+                priceTb.Text = itemObj.pricePerUnit.ToString();
+                if (itemObj.isService)
+                {
+                    is_service.IsChecked = true;
+                    unitCbb.IsEditable = false;
+                }
+                else
+                {
+                    is_item.IsChecked = true;
+                    unitCbb.IsEditable = true;
+                }
+                unitCbb.Text = itemObj.unit;
+                itemCodeTb.Text = itemObj.itemCode;
+                itemCodeInterTb.Text = itemObj.itemCodeInter;
+            }
+            catch (Exception ex)
+            {
+                new AlertBox(ex.Message).ShowDialog();
             }
         }
 
-        private void saveBtn_Click(object sender, RoutedEventArgs e)
-        {
-            saveData();
-        }
-
-        private void exitBtn_Click(object sender, RoutedEventArgs e)
+        private void shutdownBtn_Click(object sender, RoutedEventArgs e)
         {
             if (isChange())
             {
-                YesNoCancel ync = new YesNoCancel("ต้องการบันทึกข้อมูลหรือไม่", "ยืนยันการออกจากการทำงาน");
-                ync.ShowDialog();
-                switch (ync.response)
+                YesNo yn = new YesNo("ต้องการปิดโปรแกรมหรือไม่ โดยระบบจะไม่บันทึกข้อมูลไว้", "ยืนยันการออกจากการโปรแกรม");
+                yn.ShowDialog();
+                switch (yn.response)
                 {
-                    case YesNoCancel.RESULT_YES:
-                        if (!saveData())
-                        {
-                            return;
-                        }
+                    case YesNo.RESULT_YES:
                         break;
-                    case YesNoCancel.RESULT_NO:
-                        break;
-                    case YesNoCancel.RESULT_CANCEL:
+
+                    case YesNo.RESULT_NO:
                         return;
+
                     default:
                         return;
                 }
             }
-            this.Close();
+            Application.Current.Shutdown();
         }
 
-        private void Window_KeyUp(object sender, KeyEventArgs e)
+        private void unitCbb_DropDownOpened(object sender, EventArgs e)
         {
-            if (e.Key == Key.Enter)
+            if (is_service.IsChecked.Value)
             {
-                saveData();
+                unitCbb.IsDropDownOpen = false;
             }
         }
 
@@ -240,43 +238,49 @@ namespace eTaxInvoicePdfGenerator.Forms
             }
         }
 
-        private void is_service_Checked(object sender, RoutedEventArgs e)
+        private void validateData()
         {
-            unitCbb.IsEditable = false;
-            unitCbb.IsEnabled = false;
-        }
-
-        private void is_item_Checked(object sender, RoutedEventArgs e)
-        {
-            unitCbb.IsEditable = true;
-            unitCbb.IsEnabled = true;
-        }
-
-        private void unitCbb_DropDownOpened(object sender, EventArgs e)
-        {
-            if (is_service.IsChecked.Value)
+            util.Validator validator = new util.Validator();
+            validator.validateText(nameTb, "ชื่อสินค้า/บริการ", 256, true);
+            validator.validatePrice(priceTb);
+            if (is_item.IsChecked.Value)
             {
-                unitCbb.IsDropDownOpen = false;
+                validator.validateUnit(unitCbb);
+            }
+
+            validator.validateItemCode(itemCodeTb);
+            validator.validateItemCodeInter(itemCodeInterTb);
+        }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            if (saveStatus)
+            {
+                new Item().Show();
             }
         }
 
-        private void shutdownBtn_Click(object sender, RoutedEventArgs e)
+        private void Window_KeyUp(object sender, KeyEventArgs e)
         {
-            if (isChange())
+            if (e.Key == Key.Enter)
             {
-                YesNo yn = new YesNo("ต้องการปิดโปรแกรมหรือไม่ โดยระบบจะไม่บันทึกข้อมูลไว้", "ยืนยันการออกจากการโปรแกรม");
-                yn.ShowDialog();
-                switch (yn.response)
-                {
-                    case YesNo.RESULT_YES:
-                        break;
-                    case YesNo.RESULT_NO:
-                        return;
-                    default:
-                        return;
-                }
+                saveData();
             }
-            Application.Current.Shutdown();
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            setCodeList();
+            //if (this.id != 0)
+            if (this.itemObj != null)
+            {
+                showData();
+            }
+            else
+            {
+                is_item.IsChecked = true;
+            }
+            Keyboard.Focus(nameTb);
         }
     }
 }

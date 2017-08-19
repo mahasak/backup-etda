@@ -1,62 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using ETDA.Invoice.Api.Entities;
 using SqliteConnector;
-using eTaxInvoicePdfGenerator.Entity;
+using System;
 using System.Data.SQLite;
 
 namespace eTaxInvoicePdfGenerator.Dao
 {
-    class InvoiceDao
+    internal class InvoiceDao
     {
         private Sqlite sqlite;
         private string tableName = "invoice";
+
         public InvoiceDao()
         {
             string base_folder = System.AppDomain.CurrentDomain.BaseDirectory;
             //sqlite = new Sqlite(base_folder + Properties.Resources.datasource);
             sqlite = new Sqlite(base_folder + "database.db");
         }
-        internal InvoiceObj select()
+
+        internal int count()
         {
-            string txtQuery = string.Format("SELECT * FROM {0} LIMIT 1", this.tableName);
+            string txtQuery = string.Format("SELECT COUNT(*) FROM {0}", this.tableName);
             try
             {
-                InvoiceObj data = new InvoiceObj();
                 using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
                 {
                     c.Open();
                     using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
                     {
-                        using (SQLiteDataReader dr = cmd.ExecuteReader())
-                        {
-                            if (dr.Read())
-                            {
-                                data.invoiceId = dr["invoice_id"].ToString();
-                                data.invoiceName = dr["invoice_name"].ToString();
-                                data.purpose = dr["purpose"].ToString();
-                                data.purposeCode = dr["purpose_code"].ToString();
-                                data.sellerId = Convert.ToInt32(dr["seller_id"]);
-                                data.buyerId = Convert.ToInt32(dr["buyer_id"]);
-                                data.taxCode = dr["tax_code"].ToString();
-                                data.taxRate = Convert.ToDouble(dr["tax_rate"]);
-                                data.basisAmount = Convert.ToDouble(dr["basis_amount"]);
-                                data.lineTotal = Convert.ToDouble(dr["line_total"]);
-                                data.original = Convert.ToDouble(dr["original"]);
-                                data.difference = Convert.ToDouble(dr["difference"]);
-                                data.discount = Convert.ToDouble(dr["discount"]);
-                                data.taxTotal = Convert.ToDouble(dr["tax_total"]);
-                                data.grandTotal = Convert.ToDouble(dr["grand_total"]);
-                                data.remark = dr["remark"].ToString();
-                                data.discount_rate = Convert.ToDouble(dr["discount_rate"]);
-                                data.service_charge = Convert.ToDouble(dr["service_charge"]);
-                                data.service_charge_rate = Convert.ToDouble(dr["service_charge_rate"]);
-                            }
-                        }
+                        return Convert.ToInt32(cmd.ExecuteScalar());
                     }
                 }
-                return data;
             }
             catch (Exception ex)
             {
@@ -116,9 +89,9 @@ namespace eTaxInvoicePdfGenerator.Dao
             }
         }
 
-        internal int count()
+        internal void remove(string invoice_id)
         {
-            string txtQuery = string.Format("SELECT COUNT(*) FROM {0}", this.tableName);
+            string txtQuery = string.Format("DELETE FROM {0} WHERE invoice_id = @invoice_id", this.tableName);
             try
             {
                 using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
@@ -126,7 +99,8 @@ namespace eTaxInvoicePdfGenerator.Dao
                     c.Open();
                     using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
                     {
-                        return Convert.ToInt32(cmd.ExecuteScalar());
+                        cmd.Parameters.AddWithValue("@invoice_id", invoice_id);
+                        cmd.ExecuteNonQuery();
                     }
                 }
             }
@@ -136,7 +110,7 @@ namespace eTaxInvoicePdfGenerator.Dao
             }
         }
 
-        internal void save(InvoiceObj obj,bool insert)
+        internal void save(InvoiceObj obj, bool insert)
         {
             string txtQuery = string.Empty;
             if (insert)
@@ -150,7 +124,7 @@ namespace eTaxInvoicePdfGenerator.Dao
             }
             else
             {
-                //update 
+                //update
                 txtQuery = string.Format("UPDATE {0} SET ", this.tableName);
                 string values = string.Format("invoice_name=@invoice_name,purpose=@purpose,purpose_code=@purpose_code,issue_date=@issue_date,seller_id=@seller_id"
                     + ",buyer_id=@buyer_id,tax_code=@tax_code,tax_rate=@tax_rate,basis_amount=@basis_amount,line_total=@line_total"
@@ -181,7 +155,7 @@ namespace eTaxInvoicePdfGenerator.Dao
                     cmd.Parameters.AddWithValue("@discount_rate", obj.discount_rate);
                     cmd.Parameters.AddWithValue("@tax_total", obj.taxTotal);
                     cmd.Parameters.AddWithValue("@grand_total", obj.grandTotal);
-                    cmd.Parameters.AddWithValue("@remark",obj.remark);
+                    cmd.Parameters.AddWithValue("@remark", obj.remark);
                     cmd.Parameters.AddWithValue("@service_charge", obj.service_charge);
                     cmd.Parameters.AddWithValue("@service_charge_rate", obj.service_charge_rate);
                     try
@@ -196,20 +170,45 @@ namespace eTaxInvoicePdfGenerator.Dao
             }
         }
 
-        internal void remove(string invoice_id)
+        internal InvoiceObj select()
         {
-            string txtQuery = string.Format("DELETE FROM {0} WHERE invoice_id = @invoice_id", this.tableName);
+            string txtQuery = string.Format("SELECT * FROM {0} LIMIT 1", this.tableName);
             try
             {
+                InvoiceObj data = new InvoiceObj();
                 using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
                 {
                     c.Open();
                     using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
                     {
-                        cmd.Parameters.AddWithValue("@invoice_id", invoice_id);
-                        cmd.ExecuteNonQuery();
+                        using (SQLiteDataReader dr = cmd.ExecuteReader())
+                        {
+                            if (dr.Read())
+                            {
+                                data.invoiceId = dr["invoice_id"].ToString();
+                                data.invoiceName = dr["invoice_name"].ToString();
+                                data.purpose = dr["purpose"].ToString();
+                                data.purposeCode = dr["purpose_code"].ToString();
+                                data.sellerId = Convert.ToInt32(dr["seller_id"]);
+                                data.buyerId = Convert.ToInt32(dr["buyer_id"]);
+                                data.taxCode = dr["tax_code"].ToString();
+                                data.taxRate = Convert.ToDouble(dr["tax_rate"]);
+                                data.basisAmount = Convert.ToDouble(dr["basis_amount"]);
+                                data.lineTotal = Convert.ToDouble(dr["line_total"]);
+                                data.original = Convert.ToDouble(dr["original"]);
+                                data.difference = Convert.ToDouble(dr["difference"]);
+                                data.discount = Convert.ToDouble(dr["discount"]);
+                                data.taxTotal = Convert.ToDouble(dr["tax_total"]);
+                                data.grandTotal = Convert.ToDouble(dr["grand_total"]);
+                                data.remark = dr["remark"].ToString();
+                                data.discount_rate = Convert.ToDouble(dr["discount_rate"]);
+                                data.service_charge = Convert.ToDouble(dr["service_charge"]);
+                                data.service_charge_rate = Convert.ToDouble(dr["service_charge_rate"]);
+                            }
+                        }
                     }
                 }
+                return data;
             }
             catch (Exception ex)
             {

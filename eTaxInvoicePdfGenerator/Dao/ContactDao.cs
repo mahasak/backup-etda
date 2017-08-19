@@ -1,72 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using ETDA.Invoice.Api.Entities;
 using SqliteConnector;
-using eTaxInvoicePdfGenerator.Entity;
+using System;
 using System.Data.SQLite;
-using System.Data.SqlClient;
 
 namespace eTaxInvoicePdfGenerator.Dao
 {
-    class ContactDao
+    internal class ContactDao
     {
         private Sqlite sqlite;
         private string tableName = "contact";
+
         public ContactDao()
         {
             string base_folder = System.AppDomain.CurrentDomain.BaseDirectory;
             //sqlite = new Sqlite(base_folder + Properties.Resources.datasource);
             sqlite = new Sqlite(base_folder + "database.db");
-        }
-        internal ContactObj select()
-        {
-            string txtQuery = string.Format("SELECT * FROM {0} LIMIT 1", this.tableName);
-            try
-            {
-                ContactObj data = new ContactObj();
-                using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
-                {
-                    c.Open();
-                    using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
-                    {
-                        using (SQLiteDataReader dr = cmd.ExecuteReader())
-                        {
-                            if (dr.Read())
-                            {
-                                data.id = Convert.ToInt32(dr["id"]);
-                                data.name = dr["name"].ToString();
-                                data.taxId = dr["tax_id"].ToString();
-                                data.branchId = dr["branch_id"].ToString();
-                                //data.website = dr["website"].ToString();
-                                data.email = dr["email"].ToString();
-                                data.zipCode = dr["zipcode"].ToString();
-                                data.address1 = dr["address1"].ToString();
-                                //data.address2 = dr["address2"].ToString();
-                                data.country = dr["country"].ToString();
-                                data.contactPerson = dr["contact_person"].ToString();
-                                data.phoneNo = dr["phone_no"].ToString();
-                                data.phoneExt = dr["phone_ext"].ToString();
-                                //data.faxNo = dr["fax_no"].ToString();
-                                //data.faxExt = dr["fax_ext"].ToString();
-
-                                data.provinceName = dr["province_name"].ToString();
-                                data.provinceCode = dr["province_code"].ToString();
-                                data.districtName = dr["district_name"].ToString();
-                                data.districtCode = dr["district_code"].ToString();
-                                data.subdistrictName = dr["subdistrict_name"].ToString();
-                                data.subdistrcitCode = dr["subdistrict_code"].ToString();
-                                data.houseNo = dr["house_no"].ToString();
-                            }
-                        }
-                    }
-                }
-                return data;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
         }
 
         internal int count()
@@ -80,6 +28,40 @@ namespace eTaxInvoicePdfGenerator.Dao
                     using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
                     {
                         return Convert.ToInt32(cmd.ExecuteScalar());
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        internal int getLastInserted()
+        {
+            string txtQuery = string.Format("SELECT last_insert_rowid()");
+            using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
+            {
+                c.Open();
+                using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
+                {
+                    return Convert.ToInt32(cmd.ExecuteScalar());
+                }
+            }
+        }
+
+        internal void remove(int id)
+        {
+            string txtQuery = string.Format("DELETE FROM {0} WHERE id = @id", this.tableName);
+            try
+            {
+                using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
+                {
+                    c.Open();
+                    using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
+                    {
+                        cmd.Parameters.AddWithValue("@id", id);
+                        cmd.ExecuteNonQuery();
                     }
                 }
             }
@@ -137,7 +119,7 @@ namespace eTaxInvoicePdfGenerator.Dao
                     cmd.Parameters.AddWithValue("@district_code", obj.districtCode);
                     cmd.Parameters.AddWithValue("@subdistrict_name", obj.subdistrictName);
                     cmd.Parameters.AddWithValue("@subdistrict_code", obj.subdistrcitCode);
-                    cmd.Parameters.AddWithValue("@house_no",obj.houseNo);
+                    cmd.Parameters.AddWithValue("@house_no", obj.houseNo);
                     if (obj.id != 0)
                     {
                         cmd.Parameters.AddWithValue("@id", obj.id);
@@ -160,33 +142,49 @@ namespace eTaxInvoicePdfGenerator.Dao
             return id;
         }
 
-        internal int getLastInserted()
+        internal ContactObj select()
         {
-            string txtQuery = string.Format("SELECT last_insert_rowid()");
-            using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
-            {
-                c.Open();
-                using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
-                {
-                    return Convert.ToInt32(cmd.ExecuteScalar());
-                }
-            }
-        }
-
-        internal void remove(int id)
-        {
-            string txtQuery = string.Format("DELETE FROM {0} WHERE id = @id", this.tableName);
+            string txtQuery = string.Format("SELECT * FROM {0} LIMIT 1", this.tableName);
             try
             {
+                ContactObj data = new ContactObj();
                 using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
                 {
                     c.Open();
                     using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
                     {
-                        cmd.Parameters.AddWithValue("@id", id);
-                        cmd.ExecuteNonQuery();
+                        using (SQLiteDataReader dr = cmd.ExecuteReader())
+                        {
+                            if (dr.Read())
+                            {
+                                data.id = Convert.ToInt32(dr["id"]);
+                                data.name = dr["name"].ToString();
+                                data.taxId = dr["tax_id"].ToString();
+                                data.branchId = dr["branch_id"].ToString();
+                                //data.website = dr["website"].ToString();
+                                data.email = dr["email"].ToString();
+                                data.zipCode = dr["zipcode"].ToString();
+                                data.address1 = dr["address1"].ToString();
+                                //data.address2 = dr["address2"].ToString();
+                                data.country = dr["country"].ToString();
+                                data.contactPerson = dr["contact_person"].ToString();
+                                data.phoneNo = dr["phone_no"].ToString();
+                                data.phoneExt = dr["phone_ext"].ToString();
+                                //data.faxNo = dr["fax_no"].ToString();
+                                //data.faxExt = dr["fax_ext"].ToString();
+
+                                data.provinceName = dr["province_name"].ToString();
+                                data.provinceCode = dr["province_code"].ToString();
+                                data.districtName = dr["district_name"].ToString();
+                                data.districtCode = dr["district_code"].ToString();
+                                data.subdistrictName = dr["subdistrict_name"].ToString();
+                                data.subdistrcitCode = dr["subdistrict_code"].ToString();
+                                data.houseNo = dr["house_no"].ToString();
+                            }
+                        }
                     }
                 }
+                return data;
             }
             catch (Exception ex)
             {

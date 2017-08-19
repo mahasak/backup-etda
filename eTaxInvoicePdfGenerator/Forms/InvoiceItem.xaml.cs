@@ -1,19 +1,11 @@
-﻿using System;
+﻿using eTaxInvoicePdfGenerator.Dao;
+using eTaxInvoicePdfGenerator.Dialogs;
+using ETDA.Invoice.Api.Entities;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using eTaxInvoicePdfGenerator.Dao;
-using eTaxInvoicePdfGenerator.Entity;
-using System.Text.RegularExpressions;
-using eTaxInvoicePdfGenerator.Dialogs;
 
 namespace eTaxInvoicePdfGenerator.Forms
 {
@@ -23,107 +15,83 @@ namespace eTaxInvoicePdfGenerator.Forms
     public partial class InvoiceItem : Window
     {
         public InvoiceItemObj itemObj;
+
         public InvoiceItem()
         {
             InitializeComponent();
         }
 
-        private void Window_Closed(object sender, EventArgs e)
+        private void calculateSum()
         {
-
-        }
-
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            init();
-            if (itemObj != null)
+            double discount = 0.0;
+            bool parseDiscount = double.TryParse(discountTb.Text, out discount);
+            double pricePerUnit = 0.0;
+            bool parsePrice = double.TryParse(pricePerUnitTb.Text, out pricePerUnit);
+            double quantity = 0;
+            bool parseQuantity = double.TryParse(quantityTb.Text, out quantity);
+            if (parseDiscount && parsePrice && parseQuantity)
             {
-                showData();
-            }
-            else
-            {
-                is_item.IsChecked = true;
-            }
-        }
-
-        private void init()
-        {
-            try
-            {
-                List<ItemObj> itemList = new ItemDao().list();
-                itemNameCbb.DisplayMemberPath = "name";
-                itemNameCbb.SelectedValue = "id";
-                itemNameCbb.ItemsSource = itemList;
-
-                List<CodeList> codeList = new CodeListDao().list();
-                unitCbb.DisplayMemberPath = "description";
-                unitCbb.SelectedValuePath = "code";
-                unitCbb.ItemsSource = codeList;
-
-            }
-            catch (Exception ex)
-            {
-                new AlertBox(ex.Message).ShowDialog();
-            }
-        }
-
-        private void showData()
-        {
-            try
-            {
-                itemNameCbb.Text = itemObj.itemName;
-                quantityTb.Text = itemObj.quantity.ToString();
-                pricePerUnitTb.Text = itemObj.pricePerUnit.ToString();
-                discountTb.Text = itemObj.discount.ToString();
-                discountTotalTb.Text = itemObj.discountTotal.ToString();
-                if (itemObj.is_service)
+                double discountTotal = (quantity * discount / 100 * pricePerUnit);
+                if (discount > 0.0)
                 {
-                    is_service.IsChecked = true;
-                    unitCbb.IsEnabled = false;
+                    discountTotalTb.Text = discountTotal.ToString("N");
+                    itemTotalTb.Text = ((pricePerUnit * quantity) - discountTotal).ToString("N");
                 }
                 else
                 {
-                    is_item.IsChecked = true;
-                    unitCbb.IsEnabled = true;
+                    if (double.TryParse(discountTotalTb.Text, out discountTotal))
+                    {
+                        itemTotalTb.Text = ((pricePerUnit * quantity) - discountTotal).ToString("N");
+                    }
                 }
-                unitCbb.Text = itemObj.unit;
-                itemCodeTb.Text = itemObj.itemCode;
-                itemCodeInterTb.Text = itemObj.itemCodeInter;
+            }
+        }
+
+        private void discountTb_GotFocus(object sender, RoutedEventArgs e)
+        {
+            if (discountTb.Text == "0.00")
+            {
+                discountTb.Text = string.Empty;
+            }
+        }
+
+        private void discountTb_KeyUp(object sender, KeyEventArgs e)
+        {
+            calculateSum();
+        }
+
+        private void discountTb_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (discountTb.Text == string.Empty)
+            {
+                discountTb.Text = "0.00";
+            }
+        }
+
+        private void discountTotalTb_GotFocus(object sender, RoutedEventArgs e)
+        {
+            if (discountTotalTb.Text == "0.00")
+            {
+                discountTotalTb.Text = string.Empty;
+            }
+        }
+
+        private void discountTotalTb_KeyUp(object sender, KeyEventArgs e)
+        {
+            double discount = 0.0;
+            if (double.TryParse(discountTb.Text, out discount))
+            {
+                discountTb.Text = "0.00";
                 calculateSum();
             }
-            catch (Exception ex)
-            {
-                new AlertBox(ex.Message).ShowDialog();
-            }
         }
 
-        private void itemNameCbb_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void discountTotalTb_LostFocus(object sender, RoutedEventArgs e)
         {
-            if (itemNameCbb.SelectedIndex > -1)
+            if (discountTotalTb.Text == string.Empty)
             {
-                setItem((ItemObj)itemNameCbb.SelectedItem);
-                calculateSum();
+                discountTotalTb.Text = "0.00";
             }
-        }
-
-        private void setItem(ItemObj selectedItem)
-        {
-            pricePerUnitTb.Text = selectedItem.pricePerUnit.ToString();
-            unitCbb.Text = selectedItem.unit;
-            itemCodeTb.Text = selectedItem.itemCode;
-            itemCodeInterTb.Text = selectedItem.itemCodeInter;
-            if (selectedItem.isService)
-            {
-                is_service.IsChecked = true;
-            }else
-            {
-                is_item.IsChecked = true;
-            }
-        }
-
-        private void saveBtn_Click(object sender, RoutedEventArgs e)
-        {
-            saveData();
         }
 
         private void exitBtn_Click(object sender, RoutedEventArgs e)
@@ -140,15 +108,91 @@ namespace eTaxInvoicePdfGenerator.Forms
                             return;
                         }
                         break;
+
                     case YesNoCancel.RESULT_NO:
                         break;
+
                     case YesNoCancel.RESULT_CANCEL:
                         return;
+
                     default:
                         return;
                 }
             }
             this.Close();
+        }
+
+        private void init()
+        {
+            try
+            {
+                List<ItemObj> itemList = new ItemDao().list();
+                itemNameCbb.DisplayMemberPath = "name";
+                itemNameCbb.SelectedValue = "id";
+                itemNameCbb.ItemsSource = itemList;
+
+                List<CodeList> codeList = new CodeListDao().list();
+                unitCbb.DisplayMemberPath = "description";
+                unitCbb.SelectedValuePath = "code";
+                unitCbb.ItemsSource = codeList;
+            }
+            catch (Exception ex)
+            {
+                new AlertBox(ex.Message).ShowDialog();
+            }
+        }
+
+        private void is_item_Checked(object sender, RoutedEventArgs e)
+        {
+            unitCbb.IsEditable = true;
+            unitCbb.IsEnabled = true;
+        }
+
+        private void is_service_Checked(object sender, RoutedEventArgs e)
+        {
+            unitCbb.IsEditable = false;
+            unitCbb.IsEnabled = false;
+        }
+
+        private bool isChange()
+        {
+            if (itemObj == null)
+            {
+                return itemNameCbb.Text != "" || is_item.IsChecked.Value != true || quantityTb.Text != "1" ||
+                    discountTb.Text != "0.00" || pricePerUnitTb.Text != "" || unitCbb.Text != "" ||
+                    itemCodeTb.Text != "" || itemCodeInterTb.Text != "";
+            }
+            else
+            {
+                return itemNameCbb.Text != itemObj.itemName || is_service.IsChecked.Value != itemObj.is_service ||
+                    quantityTb.Text != itemObj.quantity.ToString() || discountTb.Text != itemObj.discount.ToString() ||
+                    pricePerUnitTb.Text != itemObj.pricePerUnit.ToString() || !unitCbb.Text.Equals(itemObj.unit) ||
+                    itemCodeTb.Text != itemObj.itemCode || itemCodeInterTb.Text != itemObj.itemCodeInter;
+            }
+        }
+
+        private void itemNameCbb_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (itemNameCbb.SelectedIndex > -1)
+            {
+                setItem((ItemObj)itemNameCbb.SelectedItem);
+                calculateSum();
+            }
+        }
+
+        private void pricePerUnitTb_KeyUp(object sender, KeyEventArgs e)
+        {
+            calculateSum();
+        }
+
+        private void quantityTb_KeyUp(object sender, KeyEventArgs e)
+        {
+            calculateSum();
+        }
+
+        private void saveBtn_Click(object sender, RoutedEventArgs e)
+        {
+            saveData();
         }
 
         private bool saveData()
@@ -171,7 +215,7 @@ namespace eTaxInvoicePdfGenerator.Forms
                 itemObj.quantityText = itemObj.quantity.ToString();
                 itemObj.discountTotal = Convert.ToDouble(discountTotalTb.Text);
                 itemObj.itemTotal = Convert.ToDouble(itemTotalTb.Text);
-                itemObj.itemTotalText = itemObj.itemTotal.ToString().Replace(",","");
+                itemObj.itemTotalText = itemObj.itemTotal.ToString().Replace(",", "");
                 if (itemObj.discount == 0.0)
                 {
                     itemObj.discountText = itemObj.discountTotal.ToString() + " บาท";
@@ -179,7 +223,6 @@ namespace eTaxInvoicePdfGenerator.Forms
                 else
                 {
                     itemObj.discountText = itemObj.discount + " % " + itemObj.discountTotal.ToString() + " บาท";
-
                 }
                 if (is_service.IsChecked.Value)
                 {
@@ -218,91 +261,60 @@ namespace eTaxInvoicePdfGenerator.Forms
                 new AlertBox(ex.Message).ShowDialog();
                 return false;
             }
-
         }
 
-        private void validateData()
+        private void setItem(ItemObj selectedItem)
         {
-            util.Validator validator = new util.Validator();
-            
-            validator.validateNameCbb(itemNameCbb, "ชื่อสินค้า/บริการ", 256, true);
-            validator.validateDoubleRate(discountTb, "ส่วนลดต่อรายการ", 99.99);
-            int quantity = validator.validateQuantity(quantityTb, 5);
-            double pricePerUnit = validator.validatePrice(pricePerUnitTb);
-            double itemTotal = pricePerUnit * quantity;
-            validator.validateDiscount(discountTb, itemTotal);
-            if (is_item.IsChecked.Value)
+            pricePerUnitTb.Text = selectedItem.pricePerUnit.ToString();
+            unitCbb.Text = selectedItem.unit;
+            itemCodeTb.Text = selectedItem.itemCode;
+            itemCodeInterTb.Text = selectedItem.itemCodeInter;
+            if (selectedItem.isService)
             {
-                validator.validateUnit(unitCbb);
-            }
-            validator.validateItemCode(itemCodeTb);
-            validator.validateItemCodeInter(itemCodeInterTb);
-        }
-
-        private bool isChange()
-        {
-            if (itemObj == null)
-            {
-                return itemNameCbb.Text != "" || is_item.IsChecked.Value != true || quantityTb.Text != "1" ||
-                    discountTb.Text != "0.00" || pricePerUnitTb.Text != "" || unitCbb.Text != "" ||
-                    itemCodeTb.Text != "" || itemCodeInterTb.Text != "";
+                is_service.IsChecked = true;
             }
             else
             {
-                return itemNameCbb.Text != itemObj.itemName || is_service.IsChecked.Value != itemObj.is_service ||
-                    quantityTb.Text != itemObj.quantity.ToString() || discountTb.Text != itemObj.discount.ToString() ||
-                    pricePerUnitTb.Text != itemObj.pricePerUnit.ToString() || !unitCbb.Text.Equals(itemObj.unit) ||
-                    itemCodeTb.Text != itemObj.itemCode || itemCodeInterTb.Text != itemObj.itemCodeInter;
+                is_item.IsChecked = true;
             }
         }
 
-        private void calculateSum()
+        private void showData()
         {
-            double discount = 0.0;
-            bool parseDiscount = double.TryParse(discountTb.Text, out discount);
-            double pricePerUnit = 0.0;
-            bool parsePrice = double.TryParse(pricePerUnitTb.Text, out pricePerUnit);
-            double quantity = 0;
-            bool parseQuantity = double.TryParse(quantityTb.Text, out quantity);
-            if (parseDiscount && parsePrice && parseQuantity)
+            try
             {
-                double discountTotal = (quantity * discount / 100 * pricePerUnit);
-                if (discount > 0.0)
+                itemNameCbb.Text = itemObj.itemName;
+                quantityTb.Text = itemObj.quantity.ToString();
+                pricePerUnitTb.Text = itemObj.pricePerUnit.ToString();
+                discountTb.Text = itemObj.discount.ToString();
+                discountTotalTb.Text = itemObj.discountTotal.ToString();
+                if (itemObj.is_service)
                 {
-                    discountTotalTb.Text = discountTotal.ToString("N");
-                    itemTotalTb.Text = ((pricePerUnit * quantity) - discountTotal).ToString("N");
+                    is_service.IsChecked = true;
+                    unitCbb.IsEnabled = false;
                 }
                 else
                 {
-                    if (double.TryParse(discountTotalTb.Text, out discountTotal))
-                    {
-                        itemTotalTb.Text = ((pricePerUnit * quantity) - discountTotal).ToString("N");
-                    }
+                    is_item.IsChecked = true;
+                    unitCbb.IsEnabled = true;
                 }
+                unitCbb.Text = itemObj.unit;
+                itemCodeTb.Text = itemObj.itemCode;
+                itemCodeInterTb.Text = itemObj.itemCodeInter;
+                calculateSum();
             }
-        }
-
-        private void Window_KeyUp(object sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.Enter)
+            catch (Exception ex)
             {
-                saveData();
+                new AlertBox(ex.Message).ShowDialog();
             }
         }
 
-        private void discountTb_KeyUp(object sender, KeyEventArgs e)
+        private void unitCbb_DropDownOpened(object sender, EventArgs e)
         {
-            calculateSum();
-        }
-
-        private void quantityTb_KeyUp(object sender, KeyEventArgs e)
-        {
-            calculateSum();
-        }
-
-        private void pricePerUnitTb_KeyUp(object sender, KeyEventArgs e)
-        {
-            calculateSum();
+            if (is_service.IsChecked.Value)
+            {
+                unitCbb.IsDropDownOpen = false;
+            }
         }
 
         private void unitCbb_Loaded(object sender, RoutedEventArgs e)
@@ -318,65 +330,46 @@ namespace eTaxInvoicePdfGenerator.Forms
             }
         }
 
-        private void discountTotalTb_KeyUp(object sender, KeyEventArgs e)
+        private void validateData()
         {
-            double discount = 0.0;
-            if (double.TryParse(discountTb.Text, out discount))
+            util.Validator validator = new util.Validator();
+
+            validator.validateNameCbb(itemNameCbb, "ชื่อสินค้า/บริการ", 256, true);
+            validator.validateDoubleRate(discountTb, "ส่วนลดต่อรายการ", 99.99);
+            int quantity = validator.validateQuantity(quantityTb, 5);
+            double pricePerUnit = validator.validatePrice(pricePerUnitTb);
+            double itemTotal = pricePerUnit * quantity;
+            validator.validateDiscount(discountTb, itemTotal);
+            if (is_item.IsChecked.Value)
             {
-                discountTb.Text = "0.00";
-                calculateSum();
+                validator.validateUnit(unitCbb);
+            }
+            validator.validateItemCode(itemCodeTb);
+            validator.validateItemCodeInter(itemCodeInterTb);
+        }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+        }
+
+        private void Window_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                saveData();
             }
         }
 
-        private void discountTotalTb_GotFocus(object sender, RoutedEventArgs e)
+        private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            if (discountTotalTb.Text == "0.00")
+            init();
+            if (itemObj != null)
             {
-                discountTotalTb.Text = string.Empty;
+                showData();
             }
-        }
-
-        private void discountTotalTb_LostFocus(object sender, RoutedEventArgs e)
-        {
-            if (discountTotalTb.Text == string.Empty)
+            else
             {
-                discountTotalTb.Text = "0.00";
-            }
-        }
-
-        private void discountTb_GotFocus(object sender, RoutedEventArgs e)
-        {
-            if (discountTb.Text == "0.00")
-            {
-                discountTb.Text = string.Empty;
-            }
-        }
-
-        private void discountTb_LostFocus(object sender, RoutedEventArgs e)
-        {
-            if (discountTb.Text == string.Empty)
-            {
-                discountTb.Text = "0.00";
-            }
-        }
-
-        private void is_item_Checked(object sender, RoutedEventArgs e)
-        {
-            unitCbb.IsEditable = true;
-            unitCbb.IsEnabled = true;
-        }
-
-        private void is_service_Checked(object sender, RoutedEventArgs e)
-        {
-            unitCbb.IsEditable = false;
-            unitCbb.IsEnabled = false;
-        }
-
-        private void unitCbb_DropDownOpened(object sender, EventArgs e)
-        {
-            if (is_service.IsChecked.Value)
-            {
-                unitCbb.IsDropDownOpen = false;
+                is_item.IsChecked = true;
             }
         }
     }

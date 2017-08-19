@@ -1,13 +1,13 @@
-﻿using System;
-using System.Windows;
-using System.Windows.Documents;
-using System.Collections.Generic;
-using eTaxInvoicePdfGenerator.Entity;
-using eTaxInvoicePdfGenerator.Dao;
+﻿using eTaxInvoicePdfGenerator.Dao;
 using eTaxInvoicePdfGenerator.Dialogs;
-using System.Windows.Controls;
+using ETDA.Invoice.Api.Entities;
+using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Documents;
 
 namespace eTaxInvoicePdfGenerator.Forms
 {
@@ -16,52 +16,25 @@ namespace eTaxInvoicePdfGenerator.Forms
     /// </summary>
     public partial class Item : Window
     {
+        private GridViewColumnHeader _sortColumn;
+        private ListSortDirection _sortDirection;
         private int currentPage = 1;
-        private int totalPage = 1;
         private int pageSize = 15;
-        private string sortingProperty = "id";
         private string sortingDirection = "ASC";
+        private string sortingProperty = "id";
+        private int totalPage = 1;
         public Item()
         {
             InitializeComponent();
         }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private void addBtn_Click(object sender, RoutedEventArgs e)
         {
-            showList(1);
-            prevBtn.IsEnabled = false;
+            ItemConfig config = new ItemConfig(true);
+            this.Hide();
+            config.Show();
         }
 
-        private void Window_Closed(object sender, EventArgs e)
-        {
-            MainWindow main = new MainWindow();
-            main.Show();
-        }
-
-        private void showList(int page)
-        {
-            try
-            {
-                // calculate page
-                this.currentPage = page;
-                int listSize = new ItemDao().count();
-                totalPage = (int)Math.Ceiling((double)listSize / (double)this.pageSize);
-                if (totalPage == 0)
-                {
-                    this.currentPage = 0;
-                }
-                pageLb.Content = string.Format("หน้า {0} จาก {1}", this.currentPage, this.totalPage);
-                checkPagination();
-
-                // add item list
-                //listView.ItemsSource = new ItemDao().listView(page, this.pageSize);
-                listView.ItemsSource = new ItemDao().listView(page, this.pageSize, this.sortingProperty, this.sortingDirection);
-            }
-            catch (Exception ex)
-            {
-                new AlertBox(ex.Message).ShowDialog();
-            }
-        }
         private void checkPagination()
         {
             if (currentPage == totalPage)
@@ -99,25 +72,6 @@ namespace eTaxInvoicePdfGenerator.Forms
             }
         }
 
-        private void OnHyperlinkClick(object sender, RoutedEventArgs e)
-        {
-            Hyperlink button = sender as Hyperlink;
-            ItemList item = button.DataContext as ItemList;
-            ItemConfig config = new ItemConfig(true);
-            //config.id = item.id;
-            config.itemObj = new ItemDao().select(item.id);
-            config.Show();
-            this.Hide();
-            
-        }
-
-        private void addBtn_Click(object sender, RoutedEventArgs e)
-        {
-            ItemConfig config = new ItemConfig(true);
-            this.Hide();
-            config.Show();
-        }
-
         private void delBtn_Click(object sender, RoutedEventArgs e)
         {
             var items = listView.ItemsSource;
@@ -152,8 +106,10 @@ namespace eTaxInvoicePdfGenerator.Forms
                             new AlertBox(ex.Message).ShowDialog();
                         }
                         break;
+
                     case DelNo.RESULT_NO:
                         break;
+
                     default:
                         return;
                 }
@@ -169,21 +125,6 @@ namespace eTaxInvoicePdfGenerator.Forms
             this.Close();
         }
 
-        private void prevBtn_Click(object sender, RoutedEventArgs e)
-        {
-            this.currentPage -= 1;
-            this.showList(currentPage);
-        }
-
-        private void nextBtn_Click(object sender, RoutedEventArgs e)
-        {
-            this.currentPage += 1;
-            this.showList(currentPage);
-        }
-
-        private ListSortDirection _sortDirection;
-        private GridViewColumnHeader _sortColumn;
-
         private void listView_Click(object sender, RoutedEventArgs e)
         {
             GridViewColumnHeader column = e.OriginalSource as GridViewColumnHeader;
@@ -192,17 +133,16 @@ namespace eTaxInvoicePdfGenerator.Forms
                 return;
             }
 
-
             if (_sortColumn == column)
             {
-                // Toggle sorting direction 
+                // Toggle sorting direction
                 _sortDirection = _sortDirection == ListSortDirection.Ascending ?
                                                    ListSortDirection.Descending :
                                                    ListSortDirection.Ascending;
             }
             else
             {
-                // Remove arrow from previously sorted header 
+                // Remove arrow from previously sorted header
                 if (_sortColumn != null)
                 {
                     _sortColumn.Column.HeaderTemplate = null;
@@ -227,7 +167,7 @@ namespace eTaxInvoicePdfGenerator.Forms
 
             string header = string.Empty;
 
-            // if binding is used and property name doesn't match header content 
+            // if binding is used and property name doesn't match header content
             Binding b = _sortColumn.Column.DisplayMemberBinding as Binding;
             if (b != null)
             {
@@ -236,12 +176,59 @@ namespace eTaxInvoicePdfGenerator.Forms
             }
             listView.ItemsSource = new ItemDao().listView(this.currentPage, this.pageSize, this.sortingProperty, this.sortingDirection);
 
-
             //ICollectionView resultDataView = CollectionViewSource.GetDefaultView(
             //                                           listView.ItemsSource);
             //resultDataView.SortDescriptions.Clear();
             //resultDataView.SortDescriptions.Add(
             //                            new SortDescription(header, _sortDirection));
+        }
+
+        private void nextBtn_Click(object sender, RoutedEventArgs e)
+        {
+            this.currentPage += 1;
+            this.showList(currentPage);
+        }
+
+        private void OnHyperlinkClick(object sender, RoutedEventArgs e)
+        {
+            Hyperlink button = sender as Hyperlink;
+            ItemList item = button.DataContext as ItemList;
+            ItemConfig config = new ItemConfig(true);
+            //config.id = item.id;
+            config.itemObj = new ItemDao().select(item.id);
+            config.Show();
+            this.Hide();
+        }
+
+        private void prevBtn_Click(object sender, RoutedEventArgs e)
+        {
+            this.currentPage -= 1;
+            this.showList(currentPage);
+        }
+
+        private void showList(int page)
+        {
+            try
+            {
+                // calculate page
+                this.currentPage = page;
+                int listSize = new ItemDao().count();
+                totalPage = (int)Math.Ceiling((double)listSize / (double)this.pageSize);
+                if (totalPage == 0)
+                {
+                    this.currentPage = 0;
+                }
+                pageLb.Content = string.Format("หน้า {0} จาก {1}", this.currentPage, this.totalPage);
+                checkPagination();
+
+                // add item list
+                //listView.ItemsSource = new ItemDao().listView(page, this.pageSize);
+                listView.ItemsSource = new ItemDao().listView(page, this.pageSize, this.sortingProperty, this.sortingDirection);
+            }
+            catch (Exception ex)
+            {
+                new AlertBox(ex.Message).ShowDialog();
+            }
         }
 
         private void shutdownBtn_Click(object sender, RoutedEventArgs e)
@@ -252,12 +239,26 @@ namespace eTaxInvoicePdfGenerator.Forms
             {
                 case YesNo.RESULT_YES:
                     break;
+
                 case YesNo.RESULT_NO:
                     return;
+
                 default:
                     return;
             }
             Application.Current.Shutdown();
+        }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            MainWindow main = new MainWindow();
+            main.Show();
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            showList(1);
+            prevBtn.IsEnabled = false;
         }
     }
 }

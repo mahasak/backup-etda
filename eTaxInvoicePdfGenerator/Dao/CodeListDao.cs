@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using ETDA.Invoice.Api.Entities;
 using SqliteConnector;
+using System;
+using System.Collections.Generic;
 using System.Data.SQLite;
-using eTaxInvoicePdfGenerator.Entity;
 
 namespace eTaxInvoicePdfGenerator.Dao
 {
-    class CodeListDao
+    internal class CodeListDao
     {
         private Sqlite sqlite;
         private string tableName = "code_list_unit";
@@ -17,30 +17,19 @@ namespace eTaxInvoicePdfGenerator.Dao
             sqlite = new Sqlite(base_folder + "database.db");
         }
 
-        internal CodeList select(int id)
+        internal int count()
         {
-            string txtQuery = string.Format("SELECT * FROM {0} WHERE id = @id", this.tableName);
+            string txtQuery = string.Format("SELECT COUNT(*) FROM {0}", this.tableName);
             try
             {
-                CodeList data = new CodeList();
                 using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
                 {
                     c.Open();
                     using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
                     {
-                        cmd.Parameters.AddWithValue("@id", id);
-                        using (SQLiteDataReader dr = cmd.ExecuteReader())
-                        {
-                            if (dr.Read())
-                            {
-                                data.id = Convert.ToInt32(dr["id"]);
-                                data.code = dr["code"].ToString(); ;
-                                data.description = dr["description"].ToString();
-                            }
-                        }
+                        return Convert.ToInt32(cmd.ExecuteScalar());
                     }
                 }
-                return data;
             }
             catch (Exception ex)
             {
@@ -66,44 +55,14 @@ namespace eTaxInvoicePdfGenerator.Dao
                             if (dr.Read())
                             {
                                 return true;
-                            }else
+                            }
+                            else
                             {
                                 return false;
                             }
                         }
                     }
                 }
-                
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
-        internal CodeList select(string code)
-        {
-            string txtQuery = string.Format("SELECT * FROM {0} WHERE code = '{1}'", this.tableName, code);
-            try
-            {
-                CodeList data = new CodeList();
-                using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
-                {
-                    c.Open();
-                    using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
-                    {
-                        using (SQLiteDataReader dr = cmd.ExecuteReader())
-                        {
-                            if (dr.Read())
-                            {
-                                data.id = Convert.ToInt32(dr["id"]);
-                                data.code = dr["code"].ToString(); ;
-                                data.description = dr["description"].ToString();
-                            }
-                        }
-                    }
-                }
-                return data;
             }
             catch (Exception ex)
             {
@@ -139,9 +98,9 @@ namespace eTaxInvoicePdfGenerator.Dao
             }
         }
 
-        internal int count()
+        internal void remove(int id)
         {
-            string txtQuery = string.Format("SELECT COUNT(*) FROM {0}", this.tableName);
+            string txtQuery = string.Format("DELETE FROM {0} WHERE id = @id", this.tableName);
             try
             {
                 using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
@@ -149,7 +108,8 @@ namespace eTaxInvoicePdfGenerator.Dao
                     c.Open();
                     using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
                     {
-                        return Convert.ToInt32(cmd.ExecuteScalar());
+                        cmd.Parameters.AddWithValue("@id", id);
+                        cmd.ExecuteNonQuery();
                     }
                 }
             }
@@ -198,21 +158,59 @@ namespace eTaxInvoicePdfGenerator.Dao
             }
         }
 
-        internal void remove(int id)
+        internal CodeList select(int id)
         {
-
-            string txtQuery = string.Format("DELETE FROM {0} WHERE id = @id", this.tableName);
+            string txtQuery = string.Format("SELECT * FROM {0} WHERE id = @id", this.tableName);
             try
             {
+                CodeList data = new CodeList();
                 using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
                 {
                     c.Open();
                     using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
                     {
                         cmd.Parameters.AddWithValue("@id", id);
-                        cmd.ExecuteNonQuery();
+                        using (SQLiteDataReader dr = cmd.ExecuteReader())
+                        {
+                            if (dr.Read())
+                            {
+                                data.id = Convert.ToInt32(dr["id"]);
+                                data.code = dr["code"].ToString(); ;
+                                data.description = dr["description"].ToString();
+                            }
+                        }
                     }
                 }
+                return data;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+        internal CodeList select(string code)
+        {
+            string txtQuery = string.Format("SELECT * FROM {0} WHERE code = '{1}'", this.tableName, code);
+            try
+            {
+                CodeList data = new CodeList();
+                using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
+                {
+                    c.Open();
+                    using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
+                    {
+                        using (SQLiteDataReader dr = cmd.ExecuteReader())
+                        {
+                            if (dr.Read())
+                            {
+                                data.id = Convert.ToInt32(dr["id"]);
+                                data.code = dr["code"].ToString(); ;
+                                data.description = dr["description"].ToString();
+                            }
+                        }
+                    }
+                }
+                return data;
             }
             catch (Exception ex)
             {

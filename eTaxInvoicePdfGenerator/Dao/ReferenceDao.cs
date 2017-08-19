@@ -1,49 +1,56 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using eTaxInvoicePdfGenerator.Entity;
-using System.Data.SQLite;
+﻿using ETDA.Invoice.Api.Entities;
 using SqliteConnector;
+using System;
+using System.Collections.Generic;
+using System.Data.SQLite;
 
 namespace eTaxInvoicePdfGenerator.Dao
 {
-    class ReferenceDao
+    internal class ReferenceDao
     {
         private Sqlite sqlite;
         private string tableName = "reference";
+
         public ReferenceDao()
         {
             string base_folder = System.AppDomain.CurrentDomain.BaseDirectory;
             sqlite = new Sqlite(base_folder + "database.db");
         }
 
-        internal ReferenceObj select(int id)
+        internal void clear(string invoice_id)
         {
-            string txtQuery = string.Format("SELECT * FROM {0} WHERE id = @id", this.tableName);
+            string txtQuery = string.Format("DELETE FROM {0} WHERE invoice_id = @invoice_id", this.tableName);
             try
             {
-                ReferenceObj data = new ReferenceObj();
                 using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
                 {
                     c.Open();
                     using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
                     {
-                        cmd.Parameters.AddWithValue("@id", id);
-                        using (SQLiteDataReader dr = cmd.ExecuteReader())
-                        {
-                            if (dr.Read())
-                            {
-                                data.id = Convert.ToInt32(dr["id"]);
-                                data.invoiceId = dr["invoice_id"].ToString();
-                                data.documentId = dr["document_id"].ToString();
-                                data.documentDate = dr["document_date"].ToString();
-                                data.typeCode = dr["type_code"].ToString();
-                            }
-                        }
+                        cmd.Parameters.AddWithValue("@invoice_id", invoice_id);
+                        cmd.ExecuteNonQuery();
                     }
                 }
-                return data;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        internal int count()
+        {
+            string txtQuery = string.Format("SELECT COUNT(*) FROM {0}", this.tableName);
+            try
+            {
+                using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
+                {
+                    c.Open();
+                    using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
+                    {
+                        return Convert.ToInt32(cmd.ExecuteScalar());
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -106,7 +113,8 @@ namespace eTaxInvoicePdfGenerator.Dao
                                 data.documentId = dr["document_id"].ToString();
                                 data.documentDate = dr["document_date"].ToString();
                                 data.typeCode = dr["type_code"].ToString();
-                            }else
+                            }
+                            else
                             {
                                 return null;
                             }
@@ -156,9 +164,9 @@ namespace eTaxInvoicePdfGenerator.Dao
             }
         }
 
-        internal int count()
+        internal void remove(int id)
         {
-            string txtQuery = string.Format("SELECT COUNT(*) FROM {0}", this.tableName);
+            string txtQuery = string.Format("DELETE FROM {0} WHERE id = @id", this.tableName);
             try
             {
                 using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
@@ -166,7 +174,8 @@ namespace eTaxInvoicePdfGenerator.Dao
                     c.Open();
                     using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
                     {
-                        return Convert.ToInt32(cmd.ExecuteScalar());
+                        cmd.Parameters.AddWithValue("@id", id);
+                        cmd.ExecuteNonQuery();
                     }
                 }
             }
@@ -224,41 +233,32 @@ namespace eTaxInvoicePdfGenerator.Dao
             }
         }
 
-        internal void remove(int id)
+        internal ReferenceObj select(int id)
         {
-            string txtQuery = string.Format("DELETE FROM {0} WHERE id = @id", this.tableName);
+            string txtQuery = string.Format("SELECT * FROM {0} WHERE id = @id", this.tableName);
             try
             {
+                ReferenceObj data = new ReferenceObj();
                 using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
                 {
                     c.Open();
                     using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
                     {
                         cmd.Parameters.AddWithValue("@id", id);
-                        cmd.ExecuteNonQuery();
+                        using (SQLiteDataReader dr = cmd.ExecuteReader())
+                        {
+                            if (dr.Read())
+                            {
+                                data.id = Convert.ToInt32(dr["id"]);
+                                data.invoiceId = dr["invoice_id"].ToString();
+                                data.documentId = dr["document_id"].ToString();
+                                data.documentDate = dr["document_date"].ToString();
+                                data.typeCode = dr["type_code"].ToString();
+                            }
+                        }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
-        internal void clear(string invoice_id)
-        {
-            string txtQuery = string.Format("DELETE FROM {0} WHERE invoice_id = @invoice_id", this.tableName);
-            try
-            {
-                using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
-                {
-                    c.Open();
-                    using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
-                    {
-                        cmd.Parameters.AddWithValue("@invoice_id", invoice_id);
-                        cmd.ExecuteNonQuery();
-                    }
-                }
+                return data;
             }
             catch (Exception ex)
             {

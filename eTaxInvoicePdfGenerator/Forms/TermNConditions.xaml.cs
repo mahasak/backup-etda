@@ -1,17 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using eTaxInvoicePdfGenerator.Dao;
+using ETDA.Invoice.Api.Entities;
+using System;
 using System.Windows;
 using System.Windows.Controls;
-using eTaxInvoicePdfGenerator.Dao;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using eTaxInvoicePdfGenerator.Entity;
 
 namespace eTaxInvoicePdfGenerator.Forms
 {
@@ -23,6 +15,50 @@ namespace eTaxInvoicePdfGenerator.Forms
         public TermNConditions()
         {
             InitializeComponent();
+        }
+
+        public static bool IsScrolledToEnd(TextBox textBox)
+        {
+            return textBox.VerticalOffset + textBox.ViewportHeight == textBox.ExtentHeight;
+        }
+
+        private void cancelBtn_Click(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
+        }
+
+        private void checkBox_Checked(object sender, RoutedEventArgs e)
+        {
+            nextBtn.IsEnabled = true;
+        }
+
+        private void checkBox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            nextBtn.IsEnabled = false;
+        }
+
+        private void contentTb_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (IsScrolledToEnd(contentTb))
+            {
+                acceptChkbox.IsEnabled = true;
+            }
+            else
+            {
+                acceptChkbox.IsEnabled = false;
+            }
+        }
+
+        private void contentTb_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if (IsScrolledToEnd(contentTb))
+            {
+                acceptChkbox.IsEnabled = true;
+            }
+            else
+            {
+                acceptChkbox.IsEnabled = false;
+            }
         }
 
         private void MoveNext()
@@ -47,48 +83,6 @@ namespace eTaxInvoicePdfGenerator.Forms
             if (status)
             {
                 MoveNext();
-            }
-        }
-
-        public static bool IsScrolledToEnd(TextBox textBox)
-        {
-            return textBox.VerticalOffset + textBox.ViewportHeight == textBox.ExtentHeight;
-        }
-
-        private void cancelBtn_Click(object sender, RoutedEventArgs e)
-        {
-            Application.Current.Shutdown();
-        }
-
-        private void checkBox_Checked(object sender, RoutedEventArgs e)
-        {
-            nextBtn.IsEnabled = true;
-        }
-
-        private void checkBox_Unchecked(object sender, RoutedEventArgs e)
-        {
-            nextBtn.IsEnabled = false;
-        }
-
-        private void contentTb_MouseWheel(object sender, MouseWheelEventArgs e)
-        {
-            if (IsScrolledToEnd(contentTb))
-            {
-                acceptChkbox.IsEnabled = true;
-            }else
-            {
-                acceptChkbox.IsEnabled = false;
-            }
-        }
-
-        private void contentTb_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (IsScrolledToEnd(contentTb))
-            {
-                acceptChkbox.IsEnabled = true;
-            }else
-            {
-                acceptChkbox.IsEnabled = false;
             }
         }
     }

@@ -1,15 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using ETDA.Invoice.Api.Entities;
 using SqliteConnector;
+using System;
+using System.Collections.Generic;
 using System.Data.SQLite;
-using eTaxInvoicePdfGenerator.Entity;
 
 namespace eTaxInvoicePdfGenerator.Dao
 {
-    class BuyerDao
+    internal class BuyerDao
     {
         private Sqlite sqlite;
         private string tableName = "buyer";
+
         public BuyerDao()
         {
             string base_folder = System.AppDomain.CurrentDomain.BaseDirectory;
@@ -17,108 +18,19 @@ namespace eTaxInvoicePdfGenerator.Dao
             sqlite = new Sqlite(base_folder + "database.db");
         }
 
-        internal BuyerObj select(int id)
+        internal int count()
         {
-            string txtQuery = string.Format("SELECT * FROM {0} WHERE id = @id", this.tableName);
+            string txtQuery = string.Format("SELECT COUNT(*) FROM {0}", this.tableName);
             try
             {
-                BuyerObj data = new BuyerObj();
                 using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
                 {
                     c.Open();
                     using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
                     {
-                        cmd.Parameters.AddWithValue("@id", id);
-                        using (SQLiteDataReader dr = cmd.ExecuteReader())
-                        {
-                            if (dr.Read())
-                            {
-                                data.id = Convert.ToInt32(dr["id"]);
-                                data.name = dr["name"].ToString();
-                                data.taxId = dr["tax_id"].ToString();
-                                data.phoneNo = dr["phone_no"].ToString();
-                                data.phoneExt = dr["phone_ext"].ToString();
-                                data.zipCode = dr["zipcode"].ToString();
-                                data.address1 = dr["address1"].ToString();
-                                //data.address2 = dr["address2"].ToString();
-                                data.email = dr["email"].ToString();
-                                //data.website = dr["website"].ToString();
-                                data.contactPerson = dr["contact_person"].ToString();
-                                //data.faxNo = dr["fax_no"].ToString();
-                                //data.faxExt = dr["fax_ext"].ToString();
-                                data.isBranch = Convert.ToBoolean(dr["is_branch"]);
-                                data.branchId = dr["branch_id"].ToString();
-
-                                data.provinceName = dr["province_name"].ToString();
-                                data.provinceCode = dr["province_code"].ToString();
-                                data.districtName = dr["district_name"].ToString();
-                                data.districtCode = dr["district_code"].ToString();
-                                data.subdistrictName = dr["subdistrict_name"].ToString();
-                                data.subdistrcitCode = dr["subdistrict_code"].ToString();
-                                data.houseNo = dr["house_no"].ToString();
-                            }
-                        }
+                        return Convert.ToInt32(cmd.ExecuteScalar());
                     }
                 }
-                return data;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
-        internal List<BuyerList> listView(int page, int pageSize)
-        {
-            string txtQuery = string.Format("SELECT id,name,tax_id,phone_no,phone_ext FROM {0} LIMIT {1} offset {2}", this.tableName, pageSize, (page - 1) * pageSize);
-            try
-            {
-                List<BuyerList> items = new List<BuyerList>();
-                using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
-                {
-                    c.Open();
-                    using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
-                    {
-                        using (SQLiteDataReader dr = cmd.ExecuteReader())
-                        {
-                            while (dr.Read())
-                            {
-                                items.Add(new BuyerList((int)dr.GetInt64(0), dr.GetString(1), dr.GetString(2), dr.GetString(3), dr.GetString(4)));
-                            }
-                        }
-                    }
-                }
-
-                return items;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
-        internal List<BuyerList> listView(int page, int pageSize,string sortingColumn,string sortingDirection)
-        {
-            string txtQuery = string.Format("SELECT id,name,tax_id,phone_no,phone_ext FROM {0} ORDER BY {3} {4} LIMIT {1} offset {2}", this.tableName, pageSize, (page - 1) * pageSize,sortingColumn,sortingDirection);
-            try
-            {
-                List<BuyerList> items = new List<BuyerList>();
-                using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
-                {
-                    c.Open();
-                    using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
-                    {
-                        using (SQLiteDataReader dr = cmd.ExecuteReader())
-                        {
-                            while (dr.Read())
-                            {
-                                items.Add(new BuyerList((int)dr.GetInt64(0), dr.GetString(1), dr.GetString(2), dr.GetString(3), dr.GetString(4)));
-                            }
-                        }
-                    }
-                }
-
-                return items;
             }
             catch (Exception ex)
             {
@@ -178,9 +90,67 @@ namespace eTaxInvoicePdfGenerator.Dao
             }
         }
 
-        internal int count()
+        internal List<BuyerList> listView(int page, int pageSize)
         {
-            string txtQuery = string.Format("SELECT COUNT(*) FROM {0}", this.tableName);
+            string txtQuery = string.Format("SELECT id,name,tax_id,phone_no,phone_ext FROM {0} LIMIT {1} offset {2}", this.tableName, pageSize, (page - 1) * pageSize);
+            try
+            {
+                List<BuyerList> items = new List<BuyerList>();
+                using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
+                {
+                    c.Open();
+                    using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
+                    {
+                        using (SQLiteDataReader dr = cmd.ExecuteReader())
+                        {
+                            while (dr.Read())
+                            {
+                                items.Add(new BuyerList((int)dr.GetInt64(0), dr.GetString(1), dr.GetString(2), dr.GetString(3), dr.GetString(4)));
+                            }
+                        }
+                    }
+                }
+
+                return items;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        internal List<BuyerList> listView(int page, int pageSize, string sortingColumn, string sortingDirection)
+        {
+            string txtQuery = string.Format("SELECT id,name,tax_id,phone_no,phone_ext FROM {0} ORDER BY {3} {4} LIMIT {1} offset {2}", this.tableName, pageSize, (page - 1) * pageSize, sortingColumn, sortingDirection);
+            try
+            {
+                List<BuyerList> items = new List<BuyerList>();
+                using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
+                {
+                    c.Open();
+                    using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
+                    {
+                        using (SQLiteDataReader dr = cmd.ExecuteReader())
+                        {
+                            while (dr.Read())
+                            {
+                                items.Add(new BuyerList((int)dr.GetInt64(0), dr.GetString(1), dr.GetString(2), dr.GetString(3), dr.GetString(4)));
+                            }
+                        }
+                    }
+                }
+
+                return items;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        internal void remove(int id)
+        {
+            string txtQuery = string.Format("DELETE FROM {0} WHERE id = @id", this.tableName);
             try
             {
                 using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
@@ -188,7 +158,8 @@ namespace eTaxInvoicePdfGenerator.Dao
                     c.Open();
                     using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
                     {
-                        return Convert.ToInt32(cmd.ExecuteScalar());
+                        cmd.Parameters.AddWithValue("@id", id);
+                        cmd.ExecuteNonQuery();
                     }
                 }
             }
@@ -262,21 +233,50 @@ namespace eTaxInvoicePdfGenerator.Dao
             }
         }
 
-        internal void remove(int id)
+        internal BuyerObj select(int id)
         {
-
-            string txtQuery = string.Format("DELETE FROM {0} WHERE id = @id", this.tableName);
+            string txtQuery = string.Format("SELECT * FROM {0} WHERE id = @id", this.tableName);
             try
             {
+                BuyerObj data = new BuyerObj();
                 using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
                 {
                     c.Open();
                     using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
                     {
                         cmd.Parameters.AddWithValue("@id", id);
-                        cmd.ExecuteNonQuery();
+                        using (SQLiteDataReader dr = cmd.ExecuteReader())
+                        {
+                            if (dr.Read())
+                            {
+                                data.id = Convert.ToInt32(dr["id"]);
+                                data.name = dr["name"].ToString();
+                                data.taxId = dr["tax_id"].ToString();
+                                data.phoneNo = dr["phone_no"].ToString();
+                                data.phoneExt = dr["phone_ext"].ToString();
+                                data.zipCode = dr["zipcode"].ToString();
+                                data.address1 = dr["address1"].ToString();
+                                //data.address2 = dr["address2"].ToString();
+                                data.email = dr["email"].ToString();
+                                //data.website = dr["website"].ToString();
+                                data.contactPerson = dr["contact_person"].ToString();
+                                //data.faxNo = dr["fax_no"].ToString();
+                                //data.faxExt = dr["fax_ext"].ToString();
+                                data.isBranch = Convert.ToBoolean(dr["is_branch"]);
+                                data.branchId = dr["branch_id"].ToString();
+
+                                data.provinceName = dr["province_name"].ToString();
+                                data.provinceCode = dr["province_code"].ToString();
+                                data.districtName = dr["district_name"].ToString();
+                                data.districtCode = dr["district_code"].ToString();
+                                data.subdistrictName = dr["subdistrict_name"].ToString();
+                                data.subdistrcitCode = dr["subdistrict_code"].ToString();
+                                data.houseNo = dr["house_no"].ToString();
+                            }
+                        }
                     }
                 }
+                return data;
             }
             catch (Exception ex)
             {

@@ -1,12 +1,12 @@
-﻿using System;
+﻿using eTaxInvoicePdfGenerator.Dialogs;
+using ETDA.Invoice.Api.Entities;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
-using System.Windows.Input;
-using eTaxInvoicePdfGenerator.Entity;
-using System.Collections.ObjectModel;
-using eTaxInvoicePdfGenerator.Dialogs;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace eTaxInvoicePdfGenerator.Forms
 {
@@ -16,225 +16,68 @@ namespace eTaxInvoicePdfGenerator.Forms
     public partial class RefDoc : Window
     {
         public string invoiceId;
-        public List<ReferenceObj> refList { get; set; }
         private Collection<TypeCodeObj> typeCodes = new Collection<TypeCodeObj>() {
             //new TypeCodeObj("ALT", "ใบกำกับภาษี"),
             new TypeCodeObj("81", "ใบลดหนี้"),
             new TypeCodeObj("80", "ใบเพิ่มหนี้")
         };
-        public Collection<TypeCodeObj> TypeCodes { get { return typeCodes; } }
+
         public RefDoc()
         {
             InitializeComponent();
         }
 
-        private void Window_Closed(object sender, EventArgs e)
+        public List<ReferenceObj> refList { get; set; }
+        public Collection<TypeCodeObj> TypeCodes { get { return typeCodes; } }
+        private void delBtn_Click(object sender, RoutedEventArgs e)
         {
-            this.Close();
-        }
-
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            try
+            DelNo dn = new DelNo("ต้องการลบข้อมูลหรือไม่", "ยืนยันการลบรายการ");
+            //yn.yesBtn.Content = "ลบ";
+            //yn.noBtn.Content = "ยกเลิก";
+            dn.ShowDialog();
+            switch (dn.response)
             {
-                showData();
-            }
-            catch (Exception ex)
-            {
-                new AlertBox(ex.Message).ShowDialog();
-            }
-        }
+                case DelNo.RESULT_YES:
+                    try
+                    {
+                        if (delCb5.IsChecked.Value)
+                        {
+                            refList.Remove(refList.FirstOrDefault(s => s.number == 5));
+                        }
 
-        private void showData()
-        {
-            // set 1st doc
-            resetData();
-            if (refList.Count > 0)
-            {
-                documentId1.Text = refList[0].documentId;
-                documentDate1.Text = refList[0].documentDate;
-                typeCode1.Text = refList[0].typeCodeObj.description;
-                delCb1.IsEnabled = true;
-            }
+                        if (delCb4.IsChecked.Value)
+                        {
+                            refList.Remove(refList.FirstOrDefault(s => s.number == 4));
+                        }
 
-            // set 2nd doc
-            if (refList.Count > 1)
-            {
-                documentId2.Text = refList[1].documentId;
-                documentDate2.Text = refList[1].documentDate;
-                TypeCodeObj typeCode = typeCodes.FirstOrDefault(s => s.code == refList[1].typeCodeObj.description);
-                if (typeCode == null)
-                {
-                    typeCode2.Text = refList[1].typeCodeObj.description;
-                }
-                else
-                {
-                    typeCode2.SelectedItem = typeCode;
-                }
-                delCb2.IsEnabled = true;
-            }
+                        if (delCb3.IsChecked.Value)
+                        {
+                            refList.Remove(refList.FirstOrDefault(s => s.number == 3));
+                        }
 
-            // set 3rd doc
-            if (refList.Count > 2)
-            {
-                documentId3.Text = refList[2].documentId;
-                documentDate3.Text = refList[2].documentDate;
-                TypeCodeObj typeCode = typeCodes.FirstOrDefault(s => s.code == refList[2].typeCodeObj.description);
-                if (typeCode == null)
-                {
-                    typeCode3.Text = refList[2].typeCodeObj.description;
-                }
-                else
-                {
-                    typeCode3.SelectedItem = typeCode;
-                }
-                delCb3.IsEnabled = true;
-            }
+                        if (delCb2.IsChecked.Value)
+                        {
+                            refList.Remove(refList.FirstOrDefault(s => s.number == 2));
+                        }
 
-            // set 4th doc
-            if (refList.Count > 3)
-            {
-                documentId4.Text = refList[3].documentId;
-                documentDate4.Text = refList[3].documentDate;
-                TypeCodeObj typeCode = typeCodes.FirstOrDefault(s => s.code == refList[3].typeCodeObj.description);
-                if (typeCode == null)
-                {
-                    typeCode4.Text = refList[3].typeCodeObj.description;
-                }
-                else
-                {
-                    typeCode4.SelectedItem = typeCode;
-                }
-                delCb4.IsEnabled = true;
-            }
+                        if (delCb1.IsChecked.Value)
+                        {
+                            refList.Remove(refList.FirstOrDefault(s => s.number == 1));
+                        }
+                        resetIndex();
+                        showData();
+                    }
+                    catch (Exception ex)
+                    {
+                        new AlertBox(ex.Message).ShowDialog();
+                    }
+                    break;
 
-            // set 5th doc
-            if (refList.Count > 4)
-            {
-                documentId5.Text = refList[4].documentId;
-                documentDate5.Text = refList[4].documentDate;
-                TypeCodeObj typeCode = typeCodes.FirstOrDefault(s => s.code == refList[4].typeCodeObj.description);
-                if (typeCode == null)
-                {
-                    typeCode5.Text = refList[4].typeCodeObj.description;
-                }
-                else
-                {
-                    typeCode5.SelectedItem = typeCode;
-                }
-                delCb5.IsEnabled = true;
-            }
+                case DelNo.RESULT_NO:
+                    break;
 
-        }
-
-        private void resetData()
-        {
-            documentId1.Text = "";
-            documentDate1.Text = "";
-            //typeCode1.SelectedItem = null;
-            typeCode1.IsEditable = true;
-            typeCode1.IsEnabled = false;
-            typeCode1.Text = "ใบกำกับภาษี";
-            delCb1.IsChecked = false;
-            delCb1.IsEnabled = false;
-
-            documentId2.Text = "";
-            documentDate2.Text = "";
-            typeCode2.SelectedItem = null;
-            typeCode2.Text = "";
-            delCb2.IsChecked = false;
-            delCb2.IsEnabled = false;
-
-            documentId3.Text = "";
-            documentDate3.Text = "";
-            typeCode3.SelectedItem = null;
-            typeCode3.Text = "";
-            delCb3.IsChecked = false;
-            delCb3.IsEnabled = false;
-
-            documentId4.Text = "";
-            documentDate4.Text = "";
-            typeCode4.SelectedItem = null;
-            typeCode4.Text = "";
-            delCb4.IsChecked = false;
-            delCb4.IsEnabled = false;
-
-            documentId5.Text = "";
-            documentDate5.Text = "";
-            typeCode5.SelectedItem = null;
-            typeCode5.Text = "";
-            delCb5.IsChecked = false;
-            delCb5.IsEnabled = false;
-        }
-
-        private bool saveData()
-        {
-            try
-            {
-                validateData();
-                refList = new List<ReferenceObj>();
-                int number = 1;
-                if (documentId1.Text.Length > 0)
-                {
-                    refList.Add(new ReferenceObj(number++, this.invoiceId, documentId1.Text, documentDate1.Text, typeCode1.Text, (TypeCodeObj)typeCode1.SelectedItem));
-                }
-
-                if (documentId2.Text.Length > 0)
-                {
-                    refList.Add(new ReferenceObj(number++, this.invoiceId, documentId2.Text, documentDate2.Text, typeCode2.Text, (TypeCodeObj)typeCode2.SelectedItem));
-                }
-
-                if (documentId3.Text.Length > 0)
-                {
-                    refList.Add(new ReferenceObj(number++, this.invoiceId, documentId3.Text, documentDate3.Text, typeCode3.Text, (TypeCodeObj)typeCode3.SelectedItem));
-                }
-
-                if (documentId4.Text.Length > 0)
-                {
-                    refList.Add(new ReferenceObj(number++, this.invoiceId, documentId4.Text, documentDate4.Text, typeCode4.Text, (TypeCodeObj)typeCode4.SelectedItem));
-                }
-
-                if (documentId5.Text.Length > 0)
-                {
-                    refList.Add(new ReferenceObj(number++, this.invoiceId, documentId5.Text, documentDate5.Text, typeCode5.Text, (TypeCodeObj)typeCode5.SelectedItem));
-                }
-                return true;
-            }
-            catch (Exception ex)
-            {
-                new AlertBox(ex.Message).ShowDialog();
-                return false;
-            }
-        }
-
-        private void validateData()
-        {
-            validateRef(documentId1, documentDate1, typeCode1);
-            validateRef(documentId2, documentDate2, typeCode2);
-            validateRef(documentId3, documentDate3, typeCode3);
-            validateRef(documentId4, documentDate4, typeCode4);
-            validateRef(documentId5, documentDate5, typeCode5);
-        }
-
-        private void validateRef(TextBox id,DatePicker date,ComboBox typeCode)
-        {
-            if (id.Text.Length > 0)
-            {
-                util.Validator validator = new util.Validator();
-                validator.validateText(id,"เลขที่ของใบกำกับภาษีเดิม",35,false);
-
-                validator.validateTypeCode(typeCode);
-
-                validator.validateDocDate(date,"เอกสารอ้างถึง");
-            }
-        }
-
-        private void saveBtn_Click(object sender, RoutedEventArgs e)
-        {
-            if (saveData())
-            {
-                this.DialogResult = true;
-                this.Close();
+                default:
+                    return;
             }
         }
 
@@ -253,11 +96,14 @@ namespace eTaxInvoicePdfGenerator.Forms
                         }
                         DialogResult = true;
                         break;
+
                     case YesNoCancel.RESULT_NO:
                         DialogResult = false;
                         break;
+
                     case YesNoCancel.RESULT_CANCEL:
                         return;
+
                     default:
                         return;
                 }
@@ -350,62 +196,44 @@ namespace eTaxInvoicePdfGenerator.Forms
             return false;
         }
 
-        private void Window_KeyUp(object sender, KeyEventArgs e)
+        private void resetData()
         {
-            if (e.Key == Key.Enter)
-            {
-                saveData();
-            }
-        }
+            documentId1.Text = "";
+            documentDate1.Text = "";
+            //typeCode1.SelectedItem = null;
+            typeCode1.IsEditable = true;
+            typeCode1.IsEnabled = false;
+            typeCode1.Text = "ใบกำกับภาษี";
+            delCb1.IsChecked = false;
+            delCb1.IsEnabled = false;
 
-        private void delBtn_Click(object sender, RoutedEventArgs e)
-        {
-            DelNo dn = new DelNo("ต้องการลบข้อมูลหรือไม่", "ยืนยันการลบรายการ");
-            //yn.yesBtn.Content = "ลบ";
-            //yn.noBtn.Content = "ยกเลิก";
-            dn.ShowDialog();
-            switch (dn.response)
-            {
-                case DelNo.RESULT_YES:
-                    try
-                    {
-                        if (delCb5.IsChecked.Value)
-                        {
-                            refList.Remove(refList.FirstOrDefault(s => s.number == 5));
-                        }
+            documentId2.Text = "";
+            documentDate2.Text = "";
+            typeCode2.SelectedItem = null;
+            typeCode2.Text = "";
+            delCb2.IsChecked = false;
+            delCb2.IsEnabled = false;
 
-                        if (delCb4.IsChecked.Value)
-                        {
-                            refList.Remove(refList.FirstOrDefault(s => s.number == 4));
-                        }
+            documentId3.Text = "";
+            documentDate3.Text = "";
+            typeCode3.SelectedItem = null;
+            typeCode3.Text = "";
+            delCb3.IsChecked = false;
+            delCb3.IsEnabled = false;
 
-                        if (delCb3.IsChecked.Value)
-                        {
-                            refList.Remove(refList.FirstOrDefault(s => s.number == 3));
-                        }
+            documentId4.Text = "";
+            documentDate4.Text = "";
+            typeCode4.SelectedItem = null;
+            typeCode4.Text = "";
+            delCb4.IsChecked = false;
+            delCb4.IsEnabled = false;
 
-                        if (delCb2.IsChecked.Value)
-                        {
-                            refList.Remove(refList.FirstOrDefault(s => s.number == 2));
-                        }
-
-                        if (delCb1.IsChecked.Value)
-                        {
-                            refList.Remove(refList.FirstOrDefault(s => s.number == 1));
-                        }
-                        resetIndex();
-                        showData();
-                    }
-                    catch (Exception ex)
-                    {
-                        new AlertBox(ex.Message).ShowDialog();
-                    }
-                    break;
-                case DelNo.RESULT_NO:
-                    break;
-                default:
-                    return;
-            }
+            documentId5.Text = "";
+            documentDate5.Text = "";
+            typeCode5.SelectedItem = null;
+            typeCode5.Text = "";
+            delCb5.IsChecked = false;
+            delCb5.IsEnabled = false;
         }
 
         private void resetIndex()
@@ -414,6 +242,183 @@ namespace eTaxInvoicePdfGenerator.Forms
             foreach (ReferenceObj refObj in refList)
             {
                 refObj.number = i++;
+            }
+        }
+
+        private void saveBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (saveData())
+            {
+                this.DialogResult = true;
+                this.Close();
+            }
+        }
+
+        private bool saveData()
+        {
+            try
+            {
+                validateData();
+                refList = new List<ReferenceObj>();
+                int number = 1;
+                if (documentId1.Text.Length > 0)
+                {
+                    refList.Add(new ReferenceObj(number++, this.invoiceId, documentId1.Text, documentDate1.Text, typeCode1.Text, (TypeCodeObj)typeCode1.SelectedItem));
+                }
+
+                if (documentId2.Text.Length > 0)
+                {
+                    refList.Add(new ReferenceObj(number++, this.invoiceId, documentId2.Text, documentDate2.Text, typeCode2.Text, (TypeCodeObj)typeCode2.SelectedItem));
+                }
+
+                if (documentId3.Text.Length > 0)
+                {
+                    refList.Add(new ReferenceObj(number++, this.invoiceId, documentId3.Text, documentDate3.Text, typeCode3.Text, (TypeCodeObj)typeCode3.SelectedItem));
+                }
+
+                if (documentId4.Text.Length > 0)
+                {
+                    refList.Add(new ReferenceObj(number++, this.invoiceId, documentId4.Text, documentDate4.Text, typeCode4.Text, (TypeCodeObj)typeCode4.SelectedItem));
+                }
+
+                if (documentId5.Text.Length > 0)
+                {
+                    refList.Add(new ReferenceObj(number++, this.invoiceId, documentId5.Text, documentDate5.Text, typeCode5.Text, (TypeCodeObj)typeCode5.SelectedItem));
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                new AlertBox(ex.Message).ShowDialog();
+                return false;
+            }
+        }
+
+        private void showData()
+        {
+            // set 1st doc
+            resetData();
+            if (refList.Count > 0)
+            {
+                documentId1.Text = refList[0].documentId;
+                documentDate1.Text = refList[0].documentDate;
+                typeCode1.Text = refList[0].typeCodeObj.description;
+                delCb1.IsEnabled = true;
+            }
+
+            // set 2nd doc
+            if (refList.Count > 1)
+            {
+                documentId2.Text = refList[1].documentId;
+                documentDate2.Text = refList[1].documentDate;
+                TypeCodeObj typeCode = typeCodes.FirstOrDefault(s => s.code == refList[1].typeCodeObj.description);
+                if (typeCode == null)
+                {
+                    typeCode2.Text = refList[1].typeCodeObj.description;
+                }
+                else
+                {
+                    typeCode2.SelectedItem = typeCode;
+                }
+                delCb2.IsEnabled = true;
+            }
+
+            // set 3rd doc
+            if (refList.Count > 2)
+            {
+                documentId3.Text = refList[2].documentId;
+                documentDate3.Text = refList[2].documentDate;
+                TypeCodeObj typeCode = typeCodes.FirstOrDefault(s => s.code == refList[2].typeCodeObj.description);
+                if (typeCode == null)
+                {
+                    typeCode3.Text = refList[2].typeCodeObj.description;
+                }
+                else
+                {
+                    typeCode3.SelectedItem = typeCode;
+                }
+                delCb3.IsEnabled = true;
+            }
+
+            // set 4th doc
+            if (refList.Count > 3)
+            {
+                documentId4.Text = refList[3].documentId;
+                documentDate4.Text = refList[3].documentDate;
+                TypeCodeObj typeCode = typeCodes.FirstOrDefault(s => s.code == refList[3].typeCodeObj.description);
+                if (typeCode == null)
+                {
+                    typeCode4.Text = refList[3].typeCodeObj.description;
+                }
+                else
+                {
+                    typeCode4.SelectedItem = typeCode;
+                }
+                delCb4.IsEnabled = true;
+            }
+
+            // set 5th doc
+            if (refList.Count > 4)
+            {
+                documentId5.Text = refList[4].documentId;
+                documentDate5.Text = refList[4].documentDate;
+                TypeCodeObj typeCode = typeCodes.FirstOrDefault(s => s.code == refList[4].typeCodeObj.description);
+                if (typeCode == null)
+                {
+                    typeCode5.Text = refList[4].typeCodeObj.description;
+                }
+                else
+                {
+                    typeCode5.SelectedItem = typeCode;
+                }
+                delCb5.IsEnabled = true;
+            }
+        }
+
+        private void validateData()
+        {
+            validateRef(documentId1, documentDate1, typeCode1);
+            validateRef(documentId2, documentDate2, typeCode2);
+            validateRef(documentId3, documentDate3, typeCode3);
+            validateRef(documentId4, documentDate4, typeCode4);
+            validateRef(documentId5, documentDate5, typeCode5);
+        }
+
+        private void validateRef(TextBox id, DatePicker date, ComboBox typeCode)
+        {
+            if (id.Text.Length > 0)
+            {
+                util.Validator validator = new util.Validator();
+                validator.validateText(id, "เลขที่ของใบกำกับภาษีเดิม", 35, false);
+
+                validator.validateTypeCode(typeCode);
+
+                validator.validateDocDate(date, "เอกสารอ้างถึง");
+            }
+        }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
+        private void Window_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                saveData();
+            }
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                showData();
+            }
+            catch (Exception ex)
+            {
+                new AlertBox(ex.Message).ShowDialog();
             }
         }
     }

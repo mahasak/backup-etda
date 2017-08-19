@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using ETDA.Invoice.Api.Entities;
 using SqliteConnector;
-using eTaxInvoicePdfGenerator.Entity;
+using System;
 using System.Data.SQLite;
 
 namespace eTaxInvoicePdfGenerator.Dao
 {
-    class RunningNumberDao
+    internal class RunningNumberDao
     {
         private Sqlite sqlite;
         private string tableName = "buyer";

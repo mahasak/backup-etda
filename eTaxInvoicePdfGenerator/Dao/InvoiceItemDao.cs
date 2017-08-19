@@ -1,22 +1,62 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using eTaxInvoicePdfGenerator.Entity;
-using System.Data.SQLite;
+﻿using ETDA.Invoice.Api.Entities;
 using SqliteConnector;
+using System;
+using System.Data.SQLite;
 
 namespace eTaxInvoicePdfGenerator.Dao
 {
-    class InvoiceItemDao
+    internal class InvoiceItemDao
     {
         private Sqlite sqlite;
         private string tableName = "invoice_item";
+
         public InvoiceItemDao()
         {
             string base_folder = System.AppDomain.CurrentDomain.BaseDirectory;
             //sqlite = new Sqlite(base_folder + Properties.Resources.datasource);
             sqlite = new Sqlite(base_folder + "database.db");
+        }
+
+        internal void clear(string invoice_id)
+        {
+            string txtQuery = string.Format("DELETE FROM {0} WHERE invoice_id = @invoice_id", this.tableName);
+            try
+            {
+                using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
+                {
+                    c.Open();
+                    using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
+                    {
+                        cmd.Parameters.AddWithValue("@invoice_id", invoice_id);
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        internal void remove(int id)
+        {
+            string txtQuery = string.Format("DELETE FROM {0} WHERE id = @id", this.tableName);
+            try
+            {
+                using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
+                {
+                    c.Open();
+                    using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
+                    {
+                        cmd.Parameters.AddWithValue("@id", id);
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
 
         internal void save(InvoiceItemObj obj)
@@ -31,7 +71,7 @@ namespace eTaxInvoicePdfGenerator.Dao
             }
             else
             {
-                //update 
+                //update
                 txtQuery = string.Format("UPDATE {0} SET ", this.tableName);
                 string values = string.Format("invoice_id=@invoice_id,number=@number,price_per_unit=@price_per_unit,discount=@discount"
                     + ",quantity=@quantity,unit=@unit,unit_xml=@unit_xml,item_total=@item_total,item_name=@item_name,item_code=@item_code,item_code_inter=@item_code_inter ");
@@ -67,48 +107,6 @@ namespace eTaxInvoicePdfGenerator.Dao
                         throw ex;
                     }
                 }
-            }
-        }
-
-        internal void remove(int id)
-        {
-            string txtQuery = string.Format("DELETE FROM {0} WHERE id = @id", this.tableName);
-            try
-            {
-                using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
-                {
-                    c.Open();
-                    using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
-                    {
-                        cmd.Parameters.AddWithValue("@id", id);
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
-        internal void clear(string invoice_id)
-        {
-            string txtQuery = string.Format("DELETE FROM {0} WHERE invoice_id = @invoice_id", this.tableName);
-            try
-            {
-                using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
-                {
-                    c.Open();
-                    using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
-                    {
-                        cmd.Parameters.AddWithValue("@invoice_id", invoice_id);
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                throw ex;
             }
         }
     }

@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Data.SQLite;
+﻿using ETDA.Invoice.Api.Entities;
 using SqliteConnector;
-using eTaxInvoicePdfGenerator.Entity;
+using System;
+using System.Collections.Generic;
+using System.Data.SQLite;
 
 namespace eTaxInvoicePdfGenerator.Dao
 {
-    class CauseCodeListDao
+    internal class CauseCodeListDao
     {
         private Sqlite sqlite;
         private string tableName = "cause_code_list";
@@ -17,38 +15,6 @@ namespace eTaxInvoicePdfGenerator.Dao
         {
             string base_folder = System.AppDomain.CurrentDomain.BaseDirectory;
             sqlite = new Sqlite(base_folder + "database.db");
-        }
-
-        internal CauseCodeListObj select(string code)
-        {
-            string txtQuery = string.Format("SELECT * FROM {0} WHERE Code = @code", this.tableName);
-            try
-            {
-                CauseCodeListObj data = new CauseCodeListObj();
-                using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
-                {
-                    c.Open();
-                    using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
-                    {
-                        cmd.Parameters.AddWithValue("@code", code);
-                        using (SQLiteDataReader dr = cmd.ExecuteReader())
-                        {
-                            if (dr.Read())
-                            {
-                                data.code = dr["code"].ToString();
-                                data.description = dr["description"].ToString();
-                                data.type = dr["type"].ToString();
-                                data.cases = dr["case"].ToString();
-                            }
-                        }
-                    }
-                }
-                return data;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
         }
 
         internal List<CauseCodeListObj> list(string type)
@@ -79,6 +45,38 @@ namespace eTaxInvoicePdfGenerator.Dao
                     }
                 }
                 return items;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        internal CauseCodeListObj select(string code)
+        {
+            string txtQuery = string.Format("SELECT * FROM {0} WHERE Code = @code", this.tableName);
+            try
+            {
+                CauseCodeListObj data = new CauseCodeListObj();
+                using (SQLiteConnection c = new SQLiteConnection(sqlite.ConnectionString))
+                {
+                    c.Open();
+                    using (SQLiteCommand cmd = new SQLiteCommand(txtQuery, c))
+                    {
+                        cmd.Parameters.AddWithValue("@code", code);
+                        using (SQLiteDataReader dr = cmd.ExecuteReader())
+                        {
+                            if (dr.Read())
+                            {
+                                data.code = dr["code"].ToString();
+                                data.description = dr["description"].ToString();
+                                data.type = dr["type"].ToString();
+                                data.cases = dr["case"].ToString();
+                            }
+                        }
+                    }
+                }
+                return data;
             }
             catch (Exception ex)
             {

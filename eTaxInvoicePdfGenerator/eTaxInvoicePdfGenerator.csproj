@@ -117,8 +117,8 @@
     <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.6.0.0\lib\net40\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
-    <Reference Include="ETDA.Invoice.Api, Version=0.1.4.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\ETDA.Invoice.Api.0.1.4\lib\net40\ETDA.Invoice.Api.dll</HintPath>
+    <Reference Include="ETDA.Invoice.Api, Version=0.1.5.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\ETDA.Invoice.Api.0.1.5\lib\net40\ETDA.Invoice.Api.dll</HintPath>
     </Reference>
     <Reference Include="itextsharp, Version=5.5.11.0, Culture=neutral, PublicKeyToken=8354ae6d2174ddca, processorArchitecture=MSIL">
       <HintPath>..\packages\iTextSharp.5.5.11\lib\itextsharp.dll</HintPath>
@@ -204,14 +204,6 @@
     <Compile Include="Dialogs\YesNoCancel.xaml.cs">
       <DependentUpon>YesNoCancel.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Entity\AddressCodeListObj.cs" />
-    <Compile Include="Entity\CauseCodeListObj.cs" />
-    <Compile Include="Entity\CodeList.cs" />
-    <Compile Include="Entity\ConfigObj.cs" />
-    <Compile Include="Entity\InvoiceXmlObj.cs" />
-    <Compile Include="Entity\ItemList.cs" />
-    <Compile Include="Entity\RunningNumberObj.cs" />
-    <Compile Include="Entity\TypeCodeObj.cs" />
     <Compile Include="Forms\Invoice.xaml.cs">
       <DependentUpon>Invoice.xaml</DependentUpon>
     </Compile>
@@ -317,14 +309,6 @@
     </Compile>
     <Compile Include="Dao\SellerDao.cs" />
     <Compile Include="Dao\BuyerDao.cs" />
-    <Compile Include="Entity\ContactObj.cs" />
-    <Compile Include="Entity\InvoiceObj.cs" />
-    <Compile Include="Entity\InvoiceItemObj.cs" />
-    <Compile Include="Entity\ItemObj.cs" />
-    <Compile Include="Entity\ReferenceObj.cs" />
-    <Compile Include="Entity\SellerObj.cs" />
-    <Compile Include="Entity\BuyerObj.cs" />
-    <Compile Include="Entity\BuyerList.cs" />
     <Compile Include="Forms\Buyer.xaml.cs">
       <DependentUpon>Buyer.xaml</DependentUpon>
     </Compile>

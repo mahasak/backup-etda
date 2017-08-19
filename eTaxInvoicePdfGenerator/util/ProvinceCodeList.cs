@@ -1,24 +1,12 @@
-﻿using System;
+﻿using eTaxInvoicePdfGenerator.Dao;
+using ETDA.Invoice.Api.Entities;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows.Controls;
-using eTaxInvoicePdfGenerator.Dao;
-using eTaxInvoicePdfGenerator.Entity;
 
 namespace eTaxInvoicePdfGenerator.util
 {
-    class ProvinceCodeList
+    internal class ProvinceCodeList
     {
-        internal void SetChangwat(ComboBox comboBox)
-        {
-            List<AddressCodeListObj> list = new AddressCodeListDao().ProvinceList();
-            comboBox.DisplayMemberPath = "changwat_th";
-            comboBox.SelectedValuePath = "code";
-            comboBox.ItemsSource = list;
-            comboBox.SelectedIndex = 0;
-        }
-
         internal void SetAmphoe(ComboBox comboBox, string code)
         {
             List<AddressCodeListObj> list = new AddressCodeListDao().AmphoeList(code);
@@ -28,6 +16,14 @@ namespace eTaxInvoicePdfGenerator.util
             comboBox.SelectedIndex = 0;
         }
 
+        internal void SetChangwat(ComboBox comboBox)
+        {
+            List<AddressCodeListObj> list = new AddressCodeListDao().ProvinceList();
+            comboBox.DisplayMemberPath = "changwat_th";
+            comboBox.SelectedValuePath = "code";
+            comboBox.ItemsSource = list;
+            comboBox.SelectedIndex = 0;
+        }
         internal void SetTambon(ComboBox comboBox, string code)
         {
             List<AddressCodeListObj> list = new AddressCodeListDao().TambonList(code);
